@@ -127,3 +127,12 @@ C:\Users\OCPWHermosoE\source\johnsCode_test\LMSCornerRecordFormsExtract_V4\LMSCo
 C:\Users\OCPWHermosoE\source\johnsCode_test\LMSCornerRecordFormsExtract_V4\LMSCornerRecordFormsExtract_V4\obj\Debug\command.csprojAssemblyReference.cache
 C:\Users\OCPWHermosoE\source\johnsCode_test\LMSCornerRecordFormsExtract_V4\LMSCornerRecordFormsExtract_V4\obj\Debug\command.csproj.CoreCompileInputs.cache
 C:\Users\OCPWHermosoE\source\johnsCode_test\LMSCornerRecordFormsExtract_V4\LMSCornerRecordFormsExtract_V4\obj\Debug\command.csproj.CopyComplete
+C:\Users\OCPWHermosoE\source\github-repo-CAD\forge-cogopoints-extraction\LMSCornerRecordFormsExtract\LMSCornerRecordFormsExtract\bin\Debug\command.dll
+C:\Users\OCPWHermosoE\source\github-repo-CAD\forge-cogopoints-extraction\LMSCornerRecordFormsExtract\LMSCornerRecordFormsExtract\bin\Debug\command.pdb
+C:\Users\OCPWHermosoE\source\github-repo-CAD\forge-cogopoints-extraction\LMSCornerRecordFormsExtract\LMSCornerRecordFormsExtract\bin\Debug\Newtonsoft.Json.dll
+C:\Users\OCPWHermosoE\source\github-repo-CAD\forge-cogopoints-extraction\LMSCornerRecordFormsExtract\LMSCornerRecordFormsExtract\bin\Debug\Newtonsoft.Json.xml
+C:\Users\OCPWHermosoE\source\github-repo-CAD\forge-cogopoints-extraction\LMSCornerRecordFormsExtract\LMSCornerRecordFormsExtract\obj\Debug\command.csprojAssemblyReference.cache
+C:\Users\OCPWHermosoE\source\github-repo-CAD\forge-cogopoints-extraction\LMSCornerRecordFormsExtract\LMSCornerRecordFormsExtract\obj\Debug\command.csproj.CoreCompileInputs.cache
+C:\Users\OCPWHermosoE\source\github-repo-CAD\forge-cogopoints-extraction\LMSCornerRecordFormsExtract\LMSCornerRecordFormsExtract\obj\Debug\command.csproj.CopyComplete
+C:\Users\OCPWHermosoE\source\github-repo-CAD\forge-cogopoints-extraction\LMSCornerRecordFormsExtract\LMSCornerRecordFormsExtract\obj\Debug\command.dll
+C:\Users\OCPWHermosoE\source\github-repo-CAD\forge-cogopoints-extraction\LMSCornerRecordFormsExtract\LMSCornerRecordFormsExtract\obj\Debug\command.pdb

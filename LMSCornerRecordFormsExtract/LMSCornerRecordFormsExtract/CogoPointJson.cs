@@ -21,7 +21,7 @@ namespace civil3dCogoPoints
 {
     class CogoPointJson
     {
-        public static Dictionary<string, object> geolocationCapture( CogoPointCollection passedCogoCollection)
+        public static Dictionary<string, object> geolocationCapture(CogoPointCollection passedCogoCollection)
         {
             var doc = Application.DocumentManager.MdiActiveDocument;
             var acDB = doc.Database;

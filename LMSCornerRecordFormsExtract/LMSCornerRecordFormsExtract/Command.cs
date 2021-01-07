@@ -31,16 +31,16 @@ namespace CornerRecordExtract
                 using (var trans = acDB.TransactionManager.StartTransaction())
                 {
                     // Capture Layouts to be Checked
-                    DBDictionary layoutPages = (DBDictionary)trans.GetObject(acDB.LayoutDictionaryId,OpenMode.ForRead);
+                    DBDictionary layoutPages = (DBDictionary)trans.GetObject(acDB.LayoutDictionaryId, OpenMode.ForRead);
 
                     // Dictionary report of corner record form
                     Dictionary<string, object> cr_dictReport = new Dictionary<string, object>();
-                   
+
                     // Handle Corner Record meta data dictionary extracted from Properties and Content
                     Dictionary<String, object> cornerRecordForms = new Dictionary<string, object>();
 
                     // List of form checks
-                    List<object> listOfFormChecks = new List<object>();
+                    List<Dictionary<string, object>> listOfFormChecks = new List<Dictionary<string, object>>();
 
                     // List of Layout names 
                     List<string> layoutNamesList = new List<string>();
@@ -94,7 +94,7 @@ namespace CornerRecordExtract
                                         AttributeReference attRef = (AttributeReference)trans.GetObject(attId, OpenMode.ForRead);
 
                                         if (attRef.Tag.ToString() == "CITY_NAME")
-                                        {     
+                                        {
                                             if (!String.IsNullOrEmpty(attRef.TextString.ToString()))
                                             {
                                                 crAttributes.Add("CRCity_c", attRef.TextString.ToString());
@@ -137,9 +137,8 @@ namespace CornerRecordExtract
 
                             // Check Layout for proper naming convention 
                             // Check if the Corner Record Form Attribute data is collected in the current layout.
-                         
-                            Match layoutNameMatch = Regex.Match(crFormItems.LayoutName, "^(\\s*cr\\s*\\d\\d*)$",
-                                RegexOptions.IgnoreCase);
+
+                            Match layoutNameMatch = Regex.Match(crFormItems.LayoutName, "^(\\s*cr\\s*\\d\\d*)$", RegexOptions.IgnoreCase);
                             if (layoutNameMatch.Success)
                             {
                                 if (crAttributes.ContainsKey("CRCity_c") && crAttributes.ContainsKey("Corner_Type_c")
@@ -201,7 +200,7 @@ namespace CornerRecordExtract
 
                     //if (layoutNamesList){return a list of duplicate layout names}
                     IEnumerable<string> duplicateLayouts = layoutNamesList.GroupBy(x => x).SelectMany(g => g.Skip(1));
-  
+
                     // Checks to see whether the points from the cogo point collection exist within 
                     // the layout by searching for the correct collection key and layout name
                     List<string> cogoPointCollectedCheck = cogoPointCollected.Keys.ToList();
@@ -230,7 +229,7 @@ namespace CornerRecordExtract
                         //cr_dictReport.Add("Check_duplicate_name_in_tbl", cogoPointCollected);
                     }
 
-                    if (duplicateLayouts.ToList().Any()) 
+                    if (duplicateLayouts.ToList().Any())
                     {
                         //cr_dictReport.Add("Check_duplicate_name_in_Layout", "Fail: " + String.Join(",", duplicateLayouts));
                         duplicate_ItemMessages.Add("Error_message", "Duplicate Layout named " + String.Join(",", duplicateLayouts));
@@ -317,14 +316,13 @@ namespace CornerRecordExtract
                                 // Extra CogoPoint Dictionary Error Message
                                 Dictionary<string, object> storeExtraCogoPoints = new Dictionary<string, object>();
 
-                                Match cogoNameMatch = Regex.Match(layoutNameCheckResultItem, "^(\\s*cr\\s*\\d\\d*)$",
-                                    RegexOptions.IgnoreCase);
+                                Match cogoNameMatch = Regex.Match(layoutNameCheckResultItem, "^(\\s*cr\\s*\\d\\d*)$", RegexOptions.IgnoreCase);
 
                                 if (cogoNameMatch.Success)
                                 {
                                     string cogoNameX = cogoNameMatch.Value;
 
-                                    storeExtraCogoPoints.Add("Extra_CogoPoint", "Corner Record point named " + cogoNameX + 
+                                    storeExtraCogoPoints.Add("Extra_CogoPoint", "Corner Record point named " + cogoNameX +
                                         " does not have an associated Layout");
                                     listOfExtraCogoPoints.Add(storeExtraCogoPoints);
                                 }
@@ -340,12 +338,13 @@ namespace CornerRecordExtract
                             boolCheckResults.Add(false);
                         }
                     }
-                    
+
                     // ===========================================================================================================================
                     // Output JSON file to BIN folder
                     // IF there are two true booleans in the list then add the data to the corresponding keys (cr1 => cr1)
                     if ((boolCheckResults.Count(v => v == true)) == 2)
                     {
+                        string userPassMessage = "Submitted Cad File Analyzed: Success \n\nCOGO Point Name Check: Pass \n\nLayout Name Check: Pass \n\nCorner Record Form: Pass ";
                         foreach (string cornerRecordFormKey in cornerRecordForms.Keys)
                         {
                             if (cogoPointCollected.ContainsKey(cornerRecordFormKey))
@@ -364,17 +363,21 @@ namespace CornerRecordExtract
                         cr_dictReport.Add("Layout_check", extraLayout_result);
                         cr_dictReport.Add("Form_Check", listOfFormChecks);
                         cr_dictReport.Add("Form_Result", cornerRecordForms);
+                        cr_dictReport.Add("Submission_Report", userPassMessage);
 
                         using (var writer = File.CreateText("CornerRecordForms.json"))
                         {
-                            string strResultJson = JsonConvert.SerializeObject(cr_dictReport,
-                                Formatting.Indented);
+                            string strResultJson = JsonConvert.SerializeObject(cr_dictReport, Formatting.Indented);
                             writer.WriteLine(strResultJson);
                         }
                     }
                     else
                     {
+                        // Create a function that generate user error message
+                        string userErrorMsg = UserErrorMsg(extraLayout_result, listOfFormChecks, extraCogoPoint_result);
+                        cr_dictReport.Add("CogoPoint_check", extraCogoPoint_result);
                         cr_dictReport.Add("Layout_check", extraLayout_result);
+                        cr_dictReport.Add("Submission_Report", userErrorMsg);
                         cr_dictReport.Add("Form_Check", listOfFormChecks);
                         //cr_dictReport.Add("Form_Result", cornerRecordForms);
                         using (var writer = File.CreateText("CornerRecordForms.json"))
@@ -392,6 +395,161 @@ namespace CornerRecordExtract
             {
                 ed.WriteMessage(("Exception: " + ex.Message));
             }
+        }
+
+        private static string UserErrorMsg(Dictionary<string, object> extraLayout, List<Dictionary<string, object>> listofCR_Forms, Dictionary<string, object> extraCogoPoint)
+        {
+            string errorStrMsg = "Submitted Cad File Analyzed: Fail";
+            string errorStringlayoutMsg = "";
+            string errorStringAttMsg = "";
+            // Check every Corner Record Form if form check status Failed
+            var checkCornerRecordFrom = listofCR_Forms.Any(x => x.ContainsValue("Fail"));
+
+            if (extraCogoPoint.ContainsKey("CogoPoint_check_status"))
+            {
+                if (extraCogoPoint["CogoPoint_check_status"].ToString() == "Fail")
+                {
+                    errorStrMsg = errorStrMsg + "\n\nCOGO Point Name Check: Fail";
+                    List<object> listOfLayoutCheckError = extraCogoPoint["CogoPoint_Check"] as List<object>;
+
+                    foreach (Dictionary<string, object> dictItem in listOfLayoutCheckError)
+                    {
+                        var extraCogoPointMessage = dictItem["Extra_CogoPoint"].ToString();
+                        errorStrMsg = errorStrMsg + "\n\u2022 Extra COGO Point - " + extraCogoPointMessage;
+                    }
+                }
+            }
+            if (extraLayout["Check_duplicate_name_in_Layout"].ToString() == "Fail")
+            {
+                Dictionary<string, object> duplicateLayoutError = extraLayout["Duplicate_Layout_Error"] as Dictionary<string, object>;
+                errorStrMsg = errorStrMsg + "\n\nLayout Name Check: Fail\n\u2022Error Message - " + duplicateLayoutError["Error_message"].ToString();
+                errorStrMsg = errorStrMsg + "\n\u2022Solution Message - " + duplicateLayoutError["Solution_message"].ToString();
+
+                // If a corner record form failed(True) analyze 
+                if (checkCornerRecordFrom)
+                {
+                    errorStrMsg = errorStrMsg + "\n\nCorner Record Form: Fail";
+                    foreach (Dictionary<string, object> dictObj in listofCR_Forms)
+                    {
+                        var missingFormInLayout = dictObj["Form_In_Layout_Error"];
+                        var missingAttInForm = dictObj["Form_Att_Values_Error"];
+
+                        if (!(missingFormInLayout is string))
+                        {
+                            string layoutErrorMsg = ((Dictionary<string, object>)missingFormInLayout)["Error_message"].ToString();
+                            string layoutSolutionMsg = ((Dictionary<string, object>)missingFormInLayout)["Solution_message"].ToString();
+
+                            errorStringlayoutMsg = errorStringlayoutMsg + "\n     \u2022 Error Message - " + layoutErrorMsg;
+                            errorStringlayoutMsg = errorStringlayoutMsg + "\n     \u2022 Solution Message - " + layoutSolutionMsg;
+                        }
+                        if (!(missingAttInForm is string))
+                        {
+                            foreach (KeyValuePair<string, object> dictItem in (Dictionary<string, object>)missingAttInForm)
+                            {
+                                string missingAttributeInfoKey = dictItem.Key.ToString();
+                                string missingAttributeInfoValue = dictItem.Value.ToString();
+
+                                string typeOfField;
+                                string layoutName = Regex.Match(missingAttributeInfoValue, "(\\s*cr\\s*\\d\\d*)", RegexOptions.IgnoreCase).Value;
+                                if (missingAttributeInfoKey.Contains("CRCity_c"))
+                                {
+                                    typeOfField = "city name";
+                                }
+                                else if (missingAttributeInfoKey.Contains("Legal_Description_c"))
+                                {
+                                    typeOfField = "legal description";
+                                }
+                                else
+                                {
+                                    typeOfField = missingAttributeInfoKey;
+                                }
+
+                                errorStringAttMsg = errorStringAttMsg + "\n     \u2022 Missing " + typeOfField + " field value in layout " + layoutName;
+                            }
+                        }
+                    }
+                    if (String.IsNullOrEmpty(errorStringlayoutMsg))
+                    {
+                        errorStringlayoutMsg = " : None";
+                    }
+                    if (String.IsNullOrEmpty(errorStringAttMsg))
+                    {
+                        errorStringAttMsg = " : None";
+                    }
+                    errorStrMsg = errorStrMsg + "\n\u2043 Layout Name Issues" + errorStringlayoutMsg;
+                    errorStrMsg = errorStrMsg + "\n\u2043 Missing Field Values in Form" + errorStringAttMsg;
+                }
+            }
+            if (extraLayout.ContainsKey("Layout_check_status"))
+            {
+                if (extraLayout["Layout_check_status"].ToString() == "Fail")
+                {
+                    errorStrMsg = errorStrMsg + "\n\nLayout Name Check: Fail";
+
+                    List<object> listOfLayoutCheckError = extraLayout["Layout_Check"] as List<object>;
+                    foreach (Dictionary<string, object> dictItem in listOfLayoutCheckError)
+                    {
+                        var extraLayoutMessage = dictItem["Extra_Layouts"].ToString();
+                        errorStrMsg = errorStrMsg + "\n\u2022 Extra Layout - " + extraLayoutMessage;
+                    }
+
+                    // If a corner record form failed(True) analyze 
+                    if (checkCornerRecordFrom)
+                    {
+                        errorStrMsg = errorStrMsg + "\n\nCorner Record Form: Fail";
+                        foreach (Dictionary<string, object> dictObj in listofCR_Forms)
+                        {
+                            var missingFormInLayout = dictObj["Form_In_Layout_Error"];
+                            var missingAttInForm = dictObj["Form_Att_Values_Error"];
+
+                            if (!(missingFormInLayout is string))
+                            {
+                                string layoutErrorMsg = ((Dictionary<string, object>)missingFormInLayout)["Error_message"].ToString();
+                                string layoutSolutionMsg = ((Dictionary<string, object>)missingFormInLayout)["Solution_message"].ToString();
+
+                                errorStringlayoutMsg = errorStringlayoutMsg + "\n     \u2022 Error Message - " + layoutErrorMsg;
+                                errorStringlayoutMsg = errorStringlayoutMsg + "\n     \u2022 Solution Message - " + layoutSolutionMsg;
+                            }
+                            if (!(missingAttInForm is string))
+                            {
+                                foreach (KeyValuePair<string, object> dictItem in (Dictionary<string, object>)missingAttInForm)
+                                {
+                                    string missingAttributeInfoKey = dictItem.Key.ToString();
+                                    string missingAttributeInfoValue = dictItem.Value.ToString();
+
+                                    string typeOfField;
+                                    string layoutName = Regex.Match(missingAttributeInfoValue, "(\\s*cr\\s*\\d\\d*)", RegexOptions.IgnoreCase).Value;
+                                    if (missingAttributeInfoKey.Contains("CRCity_c"))
+                                    {
+                                        typeOfField = "city name";
+                                    }
+                                    else if (missingAttributeInfoKey.Contains("Legal_Description_c"))
+                                    {
+                                        typeOfField = "legal description";
+                                    }
+                                    else
+                                    {
+                                        typeOfField = missingAttributeInfoKey;
+                                    }
+
+                                    errorStringAttMsg = errorStringAttMsg + "\n     \u2022 Missing " + typeOfField + " field value in layout " + layoutName;
+                                }
+                            }
+                        }
+                        if (String.IsNullOrEmpty(errorStringlayoutMsg))
+                        {
+                            errorStringlayoutMsg = " : None";
+                        }
+                        if (String.IsNullOrEmpty(errorStringAttMsg))
+                        {
+                            errorStringAttMsg = " : None";
+                        }
+                        errorStrMsg = errorStrMsg + "\n\u2043 Layout Name Issues" + errorStringlayoutMsg;
+                        errorStrMsg = errorStrMsg + "\n\u2043 Missing Field Values in Form" + errorStringAttMsg;
+                    }
+                }
+            }
+            return errorStrMsg;
         }
     }
     #endregion
