@@ -476,8 +476,8 @@ namespace CornerRecordExtract
                     {
                         errorStringAttMsg = " : None";
                     }
-                    errorStrMsg = errorStrMsg + "\n\u2043 Layout Name Issues" + errorStringlayoutMsg;
-                    errorStrMsg = errorStrMsg + "\n\u2043 Missing Field Values in Form" + errorStringAttMsg;
+                    errorStrMsg = errorStrMsg + "\n   Layout Name Issues" + errorStringlayoutMsg;
+                    errorStrMsg = errorStrMsg + "\n   Missing Field Values in Form" + errorStringAttMsg;
                 }
             }
             if (extraLayout.ContainsKey("Layout_check_status"))
