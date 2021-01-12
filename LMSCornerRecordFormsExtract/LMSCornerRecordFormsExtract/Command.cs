@@ -544,8 +544,8 @@ namespace CornerRecordExtract
                         {
                             errorStringAttMsg = " : None";
                         }
-                        errorStrMsg = errorStrMsg + "\n - Layout Name Issues" + errorStringlayoutMsg;
-                        errorStrMsg = errorStrMsg + "\n - Missing Field Values in Form" + errorStringAttMsg;
+                        errorStrMsg = errorStrMsg + "\n   Layout Name Issues" + errorStringlayoutMsg;
+                        errorStrMsg = errorStrMsg + "\n   Missing Field Values in Form" + errorStringAttMsg;
                     }
                 }
             }
