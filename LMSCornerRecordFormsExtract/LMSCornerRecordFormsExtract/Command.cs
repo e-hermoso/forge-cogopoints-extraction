@@ -42,7 +42,7 @@ namespace CornerRecordExtract
                     // List of form checks
                     List<Dictionary<string, object>> listOfFormChecks = new List<Dictionary<string, object>>();
 
-                    // List of Layout names 
+                    // List of Layout names
                     List<string> layoutNamesList = new List<string>();
 
                     // Dictionary result of CR Form dynamic block and Layout Name.
@@ -64,7 +64,7 @@ namespace CornerRecordExtract
                         // Form Check results Dictionary
                         Dictionary<string, object> formCheckResult_dict = new Dictionary<string, object>();
 
-                        // Missing attribute information check result 
+                        // Missing attribute information check result
                         Dictionary<string, object> missing_attributeDataForm = new Dictionary<string, object>();
 
                         // Dictionary of missing "Form" error
@@ -101,8 +101,8 @@ namespace CornerRecordExtract
                                             }
                                             else
                                             {
-                                                // Even though the values are missing still store the data in 
-                                                // crAttributes dictionary in order to check if the 
+                                                // Even though the values are missing still store the data in
+                                                // crAttributes dictionary in order to check if the
                                                 // form does exist in the current layout for further analysis.
                                                 crAttributes.Add("CRCity_c", attRef.TextString.ToString());
 
@@ -120,9 +120,9 @@ namespace CornerRecordExtract
                                             }
                                             else
                                             {
-                                                // Even though the values are missing still store the data in 
-                                                // crAttributes dictionary in order to check if the 
-                                                // form does exist in the current layout for further analysis. 
+                                                // Even though the values are missing still store the data in
+                                                // crAttributes dictionary in order to check if the
+                                                // form does exist in the current layout for further analysis.
                                                 crAttributes.Add("Corner_Type_c", "Lot");
                                                 crAttributes.Add("Legal_Description_c", attRef.TextString.ToString());
 
@@ -135,7 +135,7 @@ namespace CornerRecordExtract
                                 }
                             }
 
-                            // Check Layout for proper naming convention 
+                            // Check Layout for proper naming convention
                             // Check if the Corner Record Form Attribute data is collected in the current layout.
 
                             Match layoutNameMatch = Regex.Match(crFormItems.LayoutName, "^(\\s*cr\\s*\\d\\d*)$", RegexOptions.IgnoreCase);
@@ -190,7 +190,7 @@ namespace CornerRecordExtract
                                 }
                             }
                         }
-                        // Add Form Check Result Dictionary to List only if the results 
+                        // Add Form Check Result Dictionary to List only if the results
                         // exist to prevent model space from creating the dictionary
                         if (formCheckResult_dict.Count > 0)
                         {
@@ -201,7 +201,7 @@ namespace CornerRecordExtract
                     //if (layoutNamesList){return a list of duplicate layout names}
                     IEnumerable<string> duplicateLayouts = layoutNamesList.GroupBy(x => x).SelectMany(g => g.Skip(1));
 
-                    // Checks to see whether the points from the cogo point collection exist within 
+                    // Checks to see whether the points from the cogo point collection exist within
                     // the layout by searching for the correct collection key and layout name
                     List<string> cogoPointCollectedCheck = cogoPointCollected.Keys.ToList();
                     List<bool> boolCheckResults = new List<bool>();
@@ -287,7 +287,7 @@ namespace CornerRecordExtract
                                     //baseChecks["CogoLayoutNameMatches"] = "Pass";
                                 }
                             }
-                            // Dictionary migh change extraLayout_result (TBD) 
+                            // Dictionary migh change extraLayout_result (TBD)
                             extraLayout_result.Add("Layout_Check", listOfExtraLayouts);
                             boolCheckResults.Add(false);
                         }
@@ -308,7 +308,7 @@ namespace CornerRecordExtract
                             extraCogoPoint_result.Add("Extra_CogoPoint", "None");
                             boolCheckResults.Add(true);
                         }
-                        else // Found a CR point that DID NOT match a layout name 
+                        else // Found a CR point that DID NOT match a layout name
                         {
                             extraCogoPoint_result.Add("CogoPoint_check_status", "Fail");
                             foreach (string layoutNameCheckResultItem in layoutNameCheckResults)
@@ -333,7 +333,7 @@ namespace CornerRecordExtract
                                     //ed.WriteMessage(responseMsg["Success"]);
                                 }
                             }
-                            // Dictionary migh change extraCogoPoint_result (TBD) 
+                            // Dictionary migh change extraCogoPoint_result (TBD)
                             extraCogoPoint_result.Add("CogoPoint_Check", listOfExtraCogoPoints);
                             boolCheckResults.Add(false);
                         }
@@ -425,7 +425,7 @@ namespace CornerRecordExtract
                 errorStrMsg = errorStrMsg + "\n\nLayout Name Check: Fail\n\u2022Error Message - " + duplicateLayoutError["Error_message"].ToString();
                 errorStrMsg = errorStrMsg + "\n\u2022Solution Message - " + duplicateLayoutError["Solution_message"].ToString();
 
-                // If a corner record form failed(True) analyze 
+                // If a corner record form failed(True) analyze
                 if (checkCornerRecordFrom)
                 {
                     errorStrMsg = errorStrMsg + "\n\nCorner Record Form: Fail";
@@ -493,7 +493,7 @@ namespace CornerRecordExtract
                         errorStrMsg = errorStrMsg + "\n\u2022 Extra Layout - " + extraLayoutMessage;
                     }
 
-                    // If a corner record form failed(True) analyze 
+                    // If a corner record form failed(True) analyze
                     if (checkCornerRecordFrom)
                     {
                         errorStrMsg = errorStrMsg + "\n\nCorner Record Form: Fail";
@@ -544,8 +544,8 @@ namespace CornerRecordExtract
                         {
                             errorStringAttMsg = " : None";
                         }
-                        errorStrMsg = errorStrMsg + "\n\u2043 Layout Name Issues" + errorStringlayoutMsg;
-                        errorStrMsg = errorStrMsg + "\n\u2043 Missing Field Values in Form" + errorStringAttMsg;
+                        errorStrMsg = errorStrMsg + "\n - Layout Name Issues" + errorStringlayoutMsg;
+                        errorStrMsg = errorStrMsg + "\n - Missing Field Values in Form" + errorStringAttMsg;
                     }
                 }
             }
