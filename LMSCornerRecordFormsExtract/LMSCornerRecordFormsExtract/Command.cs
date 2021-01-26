@@ -237,15 +237,7 @@ namespace CornerRecordExtract
                                 crAttributes.Add("PrePost_Type", constructionPrePost_dict.ElementAt(0).Key.ToString());
                             }
                             // Analyze Other Monumnet type field
-                            if (otherMonumentType_dict.Count() == 0)
-                            {
-                                missing_attributeDataForm.Add("Other_Monument_Type", "Corner/Monument field is not marked in layout named " + layoutPage.Key.ToString() + ". Please select one type.");
-                            }
-                            else if (otherMonumentType_dict.Count() > 1)
-                            {
-                                missing_attributeDataForm.Add("Other_Monument_Type", "Found multiple Corner/Monument field marked in layout named " + layoutPage.Key.ToString() + ". Please select only one type.");
-                            }
-                            else
+                            if (otherMonumentType_dict.Count() != 0)
                             {
                                 crAttributes.Add("Other_Monument_Type", otherMonumentType_dict.ElementAt(0).Key.ToString());
                             }
