@@ -30,16 +30,7 @@ namespace CornerRecordExtract
 
                 using (var trans = acDB.TransactionManager.StartTransaction())
                 {
-                    //var pr = new PromptEntityOptions("\nSelect object: ");
-                    //var per = ed.GetEntity(pr);
-                    //if (per.Status == PromptStatus.OK)
-                    //{
-                    //    Entity ln = trans.GetObject(per.ObjectId, OpenMode.ForRead) as Entity;
-                    //    if (ln is DBPoint)
-                    //    {
-                    //        System.Diagnostics.Debug.WriteLine("Its DBPoint");
-                    //    }
-                    //}
+
                     // Capture Layouts to be Checked
                     DBDictionary layoutPages = (DBDictionary)trans.GetObject(acDB.LayoutDictionaryId, OpenMode.ForRead);
 
@@ -61,6 +52,8 @@ namespace CornerRecordExtract
                     // Attribute data to look for in corner record form
                     Dictionary<string, string> aliasCRTypeData = new Dictionary<string, string>() { { "Lookup1", "Government_Corner" }, { "Lookup2", "Meander" }, { "Lookup3", "Rancho" }, { "Lookup4", "Control" }, { "Lookup5", "Property" }, { "Lookup6", "Other" } };
                     Dictionary<string, string> aliasPLSActRefeData = new Dictionary<string, string>() { { "Lookup20", "8765(d)" }, { "Lookup21", "8771" }, { "Lookup11", "8773" }, { "Lookup14", "Other" } };
+                    Dictionary<string, string> aliasPrePostConstruction = new Dictionary<string, string>() { { "Lookup15", "Pre-Construction" }, { "Lookup16", "Post-Construction" } };
+                    Dictionary<string, string> aliasOtherMonType = new Dictionary<string, string>() { { "Lookup19", "Left as found" }, { "Lookup22", "Established" }, { "Lookup12", "Rebuilt" }, { "Lookup18", "Found and tagged" }, { "Lookup23", "Reestablished" }, { "Lookup13", "Referenced" } };
 
                     // Extract CogoPoints From DWG file.
                     CivilDB.CogoPointCollection cogoPointsColl = CivilDB.CogoPointCollection.GetCogoPoints(doc.Database);
@@ -78,8 +71,14 @@ namespace CornerRecordExtract
                         // Corner Type info
                         Dictionary<string, object> cornerType_dict = new Dictionary<string, object>();
 
-                        // Corner Type info
+                        // PLS Act Ref
                         Dictionary<string, object> plsActRef_dict = new Dictionary<string, object>();
+
+                        // Pre and Post construction field
+                        Dictionary<string, object> constructionPrePost_dict = new Dictionary<string, object>();
+
+                        // Other Monumnet type field
+                        Dictionary<string, object> otherMonumentType_dict = new Dictionary<string, object>();
 
                         // Form Check results Dictionary
                         Dictionary<string, object> formCheckResult_dict = new Dictionary<string, object>();
@@ -125,6 +124,20 @@ namespace CornerRecordExtract
                                                 plsActRef_dict.Add(aliasPLSActRefeData[dyAttId.PropertyName], "ON");
                                             }
                                         }
+                                        else if (aliasPrePostConstruction.ContainsKey(dyAttId.PropertyName))
+                                        {
+                                            if (dyAttId.Value.ToString() == "ON")
+                                            {
+                                                constructionPrePost_dict.Add(aliasPrePostConstruction[dyAttId.PropertyName], "ON");
+                                            }
+                                        }
+                                        else if (aliasOtherMonType.ContainsKey(dyAttId.PropertyName))
+                                        {
+                                            if (dyAttId.Value.ToString() == "ON")
+                                            {
+                                                otherMonumentType_dict.Add(aliasOtherMonType[dyAttId.PropertyName], "ON");
+                                            }
+                                        }
                                     }
 
                                     foreach (ObjectId attId in attCol)
@@ -167,6 +180,19 @@ namespace CornerRecordExtract
                                                 missing_attributeDataForm.Add("Legal_Description_c", "Missing Legal Description field for layout named " + layoutPage.Key.ToString());
                                             }
                                         }
+                                        if (attRef.Tag.ToString() == "DATE_OF_SURVEY")
+                                        {
+                                            if (!String.IsNullOrEmpty(attRef.TextString.ToString()))
+                                            {
+                                                crAttributes.Add("DATE_OF_SURVEY_c", attRef.TextString.ToString());
+                                            }
+                                            else
+                                            {
+                                                crAttributes.Add("DATE_OF_SURVEY_c", attRef.TextString.ToString());
+
+                                                missing_attributeDataForm.Add("DATE_OF_SURVEY_c", "Missing Date of Survey field for layout named " + layoutPage.Key.ToString());
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -174,11 +200,11 @@ namespace CornerRecordExtract
                             // Analyze Corner Type Form
                             if (cornerType_dict.Count() == 0)
                             {
-                                missing_attributeDataForm.Add("Corner_Type", "Corner type field is not marked in layout named " + layoutPage.Key.ToString());
+                                missing_attributeDataForm.Add("Corner_Type", "Corner type field is not marked in layout named " + layoutPage.Key.ToString() + ". Please select one type.");
                             }
                             else if (cornerType_dict.Count() > 1)
                             {
-                                missing_attributeDataForm.Add("Corner_Type", "Found multiple corner type field marked in layout named " + layoutPage.Key.ToString());
+                                missing_attributeDataForm.Add("Corner_Type", "Found multiple corner type field marked in layout named " + layoutPage.Key.ToString() + ". Please select only one type.");
                             }
                             else
                             {
@@ -187,15 +213,46 @@ namespace CornerRecordExtract
                             // Analyze PLS Act Ref data Form
                             if (plsActRef_dict.Count() == 0)
                             {
-                                missing_attributeDataForm.Add("PLS_Act_Ref", "PLS Act Ref field is not marked in layout named " + layoutPage.Key.ToString());
+                                missing_attributeDataForm.Add("PLS_Act_Ref", "PLS Act Ref field is not marked in layout named " + layoutPage.Key.ToString() + ". Please select one type.");
                             }
                             else if (plsActRef_dict.Count() > 1)
                             {
-                                missing_attributeDataForm.Add("PLS_Act_Ref", "Found multiple PLS Act Ref field marked in layout named " + layoutPage.Key.ToString());
+                                missing_attributeDataForm.Add("PLS_Act_Ref", "Found multiple PLS Act Ref field marked in layout named " + layoutPage.Key.ToString() + ". Please select only one type.");
                             }
                             else
                             {
                                 crAttributes.Add("PLS_Act_Ref", plsActRef_dict.ElementAt(0).Key.ToString());
+                            }
+                            // Analyze Pre and Post construction Form
+                            if (constructionPrePost_dict.Count() == 0)
+                            {
+                                crAttributes.Add("PrePost_Type", "None");
+                            }
+                            else if (constructionPrePost_dict.Count() > 1)
+                            {
+                                crAttributes.Add("PrePost_Type", "Pre Construction & Post Construction");
+                            }
+                            else
+                            {
+                                crAttributes.Add("PrePost_Type", constructionPrePost_dict.ElementAt(0).Key.ToString());
+                            }
+                            // Analyze Other Monumnet type field
+                            if (otherMonumentType_dict.Count() == 0)
+                            {
+                                missing_attributeDataForm.Add("Other_Monument_Type", "Corner/Monument field is not marked in layout named " + layoutPage.Key.ToString() + ". Please select one type.");
+                            }
+                            else if (otherMonumentType_dict.Count() > 1)
+                            {
+                                missing_attributeDataForm.Add("Other_Monument_Type", "Found multiple Corner/Monument field marked in layout named " + layoutPage.Key.ToString() + ". Please select only one type.");
+                            }
+                            else
+                            {
+                                crAttributes.Add("Other_Monument_Type", otherMonumentType_dict.ElementAt(0).Key.ToString());
+                            }
+                            // Analyze both Pre and Post construction Form & Other Monumnet type Form
+                            if(otherMonumentType_dict.Count() == 0 && constructionPrePost_dict.Count() == 0)
+                            {
+                                missing_attributeDataForm.Add("Corner/Monument_Type", "Corner/Monument field is not marked in layout named " + layoutPage.Key.ToString() + ". Please select one type.");
                             }
 
                             // Check Layout for proper naming convention 
@@ -403,8 +460,8 @@ namespace CornerRecordExtract
 
                     // ===========================================================================================================================
                     // Output JSON file to BIN folder
-                    // IF there are two true booleans in the list then add the data to the corresponding keys (cr1 => cr1)
-                    if ((boolCheckResults.Count(v => v == true)) == 2)
+                    // If there are two true booleans in the list then add the data to the corresponding keys (cr1 => cr1) and Check if missing attribute information was found
+                    if ((boolCheckResults.Count(v => v == true)) == 2 && listOfFormChecks.Where(x => x["Form_Check_Status"].ToString() == "Fail").Count() == 0)
                     {
                         string userPassMessage = "Submitted Cad File Analyzed: Success \n\nCOGO Point Name Check: Pass \n\nLayout Name Check: Pass \n\nCorner Record Form: Pass ";
                         foreach (string cornerRecordFormKey in cornerRecordForms.Keys)
@@ -439,8 +496,8 @@ namespace CornerRecordExtract
                         string userErrorMsg = UserErrorMsg(extraLayout_result, listOfFormChecks, extraCogoPoint_result);
                         cr_dictReport.Add("CogoPoint_check", extraCogoPoint_result);
                         cr_dictReport.Add("Layout_check", extraLayout_result);
-                        cr_dictReport.Add("Submission_Report", userErrorMsg);
                         cr_dictReport.Add("Form_Check", listOfFormChecks);
+                        cr_dictReport.Add("Submission_Report", userErrorMsg);
                         //cr_dictReport.Add("Form_Result", cornerRecordForms);
                         using (var writer = File.CreateText("CornerRecordForms.json"))
                         {

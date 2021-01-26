@@ -76,9 +76,13 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>xcopy /Y /F "$(TargetDir)*.dll" "$(ProjectDir)OCPWBR.bundle\Contents\"
+    <PreBuildEvent>
+    </PreBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent>xcopy /Y /F "$(TargetDir)*.dll" "$(ProjectDir)OCPWBR.bundle\Contents\"
 del /F "$(ProjectDir)..\Bundles\OCPWBR_4.zip"
 "C:\Program Files\7-Zip\7z.exe" a -tzip "$(ProjectDir)../Bundles/OCPWBR.zip" "$(ProjectDir)OCPWBR.bundle\" -xr0!*.pdb
-</PreBuildEvent>
+</PostBuildEvent>
   </PropertyGroup>
 </Project>
